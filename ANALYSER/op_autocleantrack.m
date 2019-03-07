@@ -1,6 +1,6 @@
 function [ status ] = op_autocleantrack( ratwalk_h, panel_h )
 %OP_DELFRAMES delete frames between specified time intervals
-%   Input dialogue will ask for start tie and end time in seconds
+%   Input dialogue will ask for start time and end time in seconds
 %   Time points between the two time points (INCLUSIVE) will be found
 %   Corresponding frames will be removed
 %   Don't forget to save the result again to keep the change
@@ -8,6 +8,9 @@ function [ status ] = op_autocleantrack( ratwalk_h, panel_h )
 
 status=false;
 try
+    % -------------------------------------------------
+    % parameter definitions
+    frame_multiple=5;   % multiplication factor of frame rate perceived as dodgy
     % -------------------------------------------------
     % get time coordinate
     if iscell(ratwalk_h)
@@ -20,7 +23,7 @@ try
     todo=cellfun(@(x)~isempty(x),delidx);
     
     % ask for time points
-    prompt = {sprintf('%g frames to delete\n',cellfun(@(x,y)numel(x)-numel(y)+1,delidx,nframe))};
+    prompt = {sprintf('%g frames to delete from %g frames\n',[cellfun(@(x)numel(x),delidx);cell2mat(nframe)])};
     dlg_title = 'Auto Delete Frames';
     def = {'Yes'};
     button = questdlg(prompt,dlg_title,'Yes','No',def);
@@ -51,7 +54,9 @@ end
         ratbound=ratobj.abstract_av.object(3).boundary;
         % calculate rat centroid and area
         [~,~,area]=cellfun(@(x)find_centroid(x),ratbound);
-        dodgytimestamp=find(diff(ratobj.abstract_av.time)<0.2/ratobj.abstract_av.frame_rate)+1;
+        % find frame interval that is too close
+        dodgytimestamp=find(diff(ratobj.abstract_av.time)<1/(frame_multiple*ratobj.abstract_av.frame_rate))+1;
+        % area is zero and timestamp issues
         dirtyidx=union(find(area==0),dodgytimestamp);
     end
 end

@@ -6,6 +6,13 @@ function [ status ] = op_centroidtrack( ratwalk_h, panel_h )
 status=false;
 try
     % -------------------------------------------------
+    % parameter definitions
+    histbin=100;    % number of bins in area histogram
+    
+    trackhandle=panel_h.PANEL_RESULT2D;
+    disthandle=panel_h.PANEL_RESULT1DRECT;
+    areahandle=panel_h.PANEL_RESULT1DSQ;
+    % -------------------------------------------------
     % calculation
     if iscell(ratwalk_h)
         [time,pos,area,dist]=cellfun(@(x)calculate(x),ratwalk_h,'UniformOutput',false);
@@ -13,44 +20,48 @@ try
         [time{1},pos{1},area{1},dist{1}]=calculate(ratwalk_h);
     end
     s=cellfun(@(x)cumsum(x),dist,'UniformOutput',false);% get cumulative distance
+    
     % -------------------------------------------------
     % plotting
     % area histogram edge definition
-    edgex=linspace(1e-3,1e-2,100);
+    edgex=linspace(1e-3,1e-2,histbin);
     plotx=diff(edgex)/2+edgex(1:end-1);
+    % get object names
+    objname=regexp(cellfun(@(x)x.name,ratwalk_h,'UniformOutput',false),'(?<=\\)\w*(?=.rwm)','match');
     for ratidx=1:numel(time)
         % plot distribution of area during this time
         [ploty,~,plotbin]=histcounts(area{ratidx},edgex);
         ploty=accumarray(plotbin+1,time{ratidx},[numel(ploty)+1,1],@sum,0);% total time
         ploty=100*ploty./sum(ploty);% normalise sum to 1
         ploty=ploty(2:end);% remove the out of bound bin
-        plot(panel_h.PANEL_RESULT1DSQ,plotx,ploty,'LineStyle','-','LineWidth',1);
+        plot(areahandle,plotx,ploty,'LineStyle','-','LineWidth',1,'Tag',char(objname{ratidx}));
         % plot cumulative distances travelled
-        plot(panel_h.PANEL_RESULT1DRECT,time{ratidx}(2:end),s{ratidx},'LineStyle','-','LineWidth',1);
+        plot(disthandle,time{ratidx}(2:end),s{ratidx},'LineStyle','-','LineWidth',1,'Tag',char(objname{ratidx}));
         % plot rat walk trajectory for centroid positions
-        plot(panel_h.PANEL_RESULT2D,pos{ratidx}(:,1),pos{ratidx}(:,2),'Marker','.','MarkerSize',5,'LineStyle','none','LineWidth',1);
+        plot(trackhandle,pos{ratidx}(:,1),pos{ratidx}(:,2),'Marker','.','MarkerSize',5,'LineStyle','none','LineWidth',1,'Tag',char(objname{ratidx}));
     end
     % rat area distribution plot
-    panel_h.PANEL_RESULT1DSQ.XLabel.String='Rat Area (m^{3})';
-    panel_h.PANEL_RESULT1DSQ.YLabel.String='% Time spent';
-    panel_h.PANEL_RESULT1DSQ.XGrid='on';panel_h.PANEL_RESULT1DSQ.XMinorGrid='on';
-    panel_h.PANEL_RESULT1DSQ.YGrid='on';panel_h.PANEL_RESULT1DSQ.YMinorGrid='on';
-    axis(panel_h.PANEL_RESULT1DSQ,'tight');
+    areahandle.XLabel.String='Rat Area (m^{3})';
+    areahandle.YLabel.String='% Time spent';
+    areahandle.XGrid='on';areahandle.XMinorGrid='on';
+    areahandle.YGrid='on';areahandle.YMinorGrid='on';
+    axis(areahandle,'tight');
     
     % cumulative distance plot
-    panel_h.PANEL_RESULT1DRECT.XLabel.String='Time (s)';
-    panel_h.PANEL_RESULT1DRECT.YLabel.String='Cumulative Distance (m)';
-    panel_h.PANEL_RESULT1DRECT.XGrid='on';panel_h.PANEL_RESULT1DRECT.XMinorGrid='on';
-    panel_h.PANEL_RESULT1DRECT.YGrid='on';panel_h.PANEL_RESULT1DRECT.YMinorGrid='on';
-    axis(panel_h.PANEL_RESULT1DRECT,'tight');
+    disthandle.XLabel.String='Time (s)';
+    disthandle.YLabel.String='Cumulative Distance (m)';
+    disthandle.XGrid='on';disthandle.XMinorGrid='on';
+    disthandle.YGrid='on';disthandle.YMinorGrid='on';
+    axis(disthandle,'tight');
     
     % track plot
-    panel_h.PANEL_RESULT2D.XLabel.String='distance (m)';
-    panel_h.PANEL_RESULT2D.YLabel.String='distance (m)';
-    panel_h.PANEL_RESULT2D.XGrid='on';panel_h.PANEL_RESULT2D.XMinorGrid='on';
-    panel_h.PANEL_RESULT2D.YGrid='on';panel_h.PANEL_RESULT2D.YMinorGrid='on';
-    axis(panel_h.PANEL_RESULT2D,'tight');
+    trackhandle.XLabel.String='distance (m)';
+    trackhandle.YLabel.String='distance (m)';
+    trackhandle.XGrid='on';trackhandle.XMinorGrid='on';
+    trackhandle.YGrid='on';trackhandle.YMinorGrid='on';
+    axis(trackhandle,'tight');
     
+    %--------------------------------------------------------------------
     % extra group information of estimated distance travelled over 10 minutes
     s_total=cellfun(@(x,y)x(end)/y(end)*600,s,time);
     plot(panel_h.PANEL_RESULTGROUP1DRECT,1:numel(time),s_total,'Marker','o','MarkerSize',8,'LineStyle','-','LineWidth',2);
@@ -68,15 +79,14 @@ try
     panel_h.PANEL_RESULTGROUP1DSQ.XGrid='on';panel_h.PANEL_RESULTGROUP1DSQ.XMinorGrid='on';
     panel_h.PANEL_RESULTGROUP1DSQ.YGrid='on';panel_h.PANEL_RESULTGROUP1DSQ.YMinorGrid='on';
     axis(panel_h.PANEL_RESULTGROUP1DSQ,'auto');
+    %--------------------------------------------------------------------
     
     status=true;
 catch exception
     message=[exception.message,data2clip(exception.stack)];
     errordlg(sprintf('%s\n',message),'analyser error','modal');
 end
-
 % -------------------------------------------------
-
     function [ time, position, area, distance ] = calculate( ratobj )
         % get time coordinate
         time=ratobj.abstract_av.time;

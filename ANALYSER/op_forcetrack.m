@@ -10,6 +10,12 @@ status=false;
 vel_grid=linspace(0,0.5,20);acc_grid=linspace(-5,5,20);
 try
     % -------------------------------------------------
+    % parameter definitions
+    
+    corrhandle=panel_h.PANEL_RESULT2D;
+    forcehandle=panel_h.PANEL_RESULT1DRECT;
+    accelhandle=panel_h.PANEL_RESULT1DSQ;
+    % -------------------------------------------------
     % calculation
     if iscell(ratwalk_h)
         [t,v,a,f,~]=cellfun(@(x)calculate(x),ratwalk_h,'UniformOutput',false);
@@ -24,6 +30,8 @@ try
     %edgex=acc_grid;
     % calculate plot x axis
     plotx=diff(edgex)/2+edgex(1:end-1);
+    % get object names
+    objname=regexp(cellfun(@(x)x.name,ratwalk_h,'UniformOutput',false),'(?<=\\)\w*(?=.rwm)','match');
     for ratidx=1:numel(t)
         % calculate histogram
         [ploty,~,plotbin]=histcounts(a{ratidx},edgex);
@@ -31,10 +39,10 @@ try
         ploty=100*ploty./sum(ploty);% normalise sum to 1
         ploty=ploty(2:end);% remove the out of bound bin
         % plot distribution of acceleration during this time
-        plot(panel_h.PANEL_RESULT1DSQ,plotx,ploty,'Marker','o','MarkerSize',3,'LineStyle','-','LineWidth',1);
+        plot(accelhandle,plotx,ploty,'Marker','o','MarkerSize',3,'LineStyle','-','LineWidth',1,'Tag',char(objname{ratidx}));
         
         % plot Force over time
-        plot(panel_h.PANEL_RESULT1DRECT,t{ratidx}(2:end),f{ratidx},'LineStyle','-','LineWidth',1);
+        plot(forcehandle,t{ratidx}(2:end),f{ratidx},'LineStyle','-','LineWidth',1,'Tag',char(objname{ratidx}));
         
         % extra figure for contour of scatter plot below
         sp_num=ceil(sqrt(numel(t)));
@@ -53,30 +61,30 @@ try
         axis(h,[vel_grid(1),vel_grid(end),acc_grid(1),acc_grid(end)]);
         
         % plot speed vs accel
-        plot(panel_h.PANEL_RESULT2D,v{ratidx}(2:end),a{ratidx},'Marker','.','MarkerSize',2,'MarkerFaceColor','none','LineStyle','none');
-        
+        plot(corrhandle,v{ratidx}(2:end),a{ratidx},'Marker','.','MarkerSize',2,'MarkerFaceColor','none','LineStyle','none','Tag',char(objname{ratidx}));
     end
+    
     % plot labelling
-    panel_h.PANEL_RESULT1DSQ.XLabel.String='Acceleration (m/s^{2})';
-    panel_h.PANEL_RESULT1DSQ.YLabel.String='% Time spent';
-    set(panel_h.PANEL_RESULT1DSQ,'YScale','log');
-    panel_h.PANEL_RESULT1DSQ.XGrid='on';panel_h.PANEL_RESULT1DSQ.XMinorGrid='on';
-    panel_h.PANEL_RESULT1DSQ.YGrid='on';panel_h.PANEL_RESULT1DSQ.YMinorGrid='on';
-    axis(panel_h.PANEL_RESULT1DSQ,[min(edgex),max(edgex),1e-4,1e2]);
+    accelhandle.XLabel.String='Acceleration (m/s^{2})';
+    accelhandle.YLabel.String='% Time spent';
+    set(accelhandle,'YScale','log');
+    accelhandle.XGrid='on';accelhandle.XMinorGrid='on';
+    accelhandle.YGrid='on';accelhandle.YMinorGrid='on';
+    axis(accelhandle,[min(edgex),max(edgex),1e-4,1e2]);
     
-    panel_h.PANEL_RESULT1DRECT.XLabel.String='Time (s)';
-    panel_h.PANEL_RESULT1DRECT.YLabel.String='Force (N)';
-    panel_h.PANEL_RESULT1DRECT.XGrid='on';panel_h.PANEL_RESULT1DRECT.XMinorGrid='on';
-    panel_h.PANEL_RESULT1DRECT.YGrid='on';panel_h.PANEL_RESULT1DRECT.YMinorGrid='on';
-    axis(panel_h.PANEL_RESULT1DRECT,'tight');
+    forcehandle.XLabel.String='Time (s)';
+    forcehandle.YLabel.String='Force (N)';
+    forcehandle.XGrid='on';forcehandle.XMinorGrid='on';
+    forcehandle.YGrid='on';forcehandle.YMinorGrid='on';
+    axis(forcehandle,'tight');
     
-    panel_h.PANEL_RESULT2D.XLabel.String='speed (m/s)';
-    panel_h.PANEL_RESULT2D.YLabel.String='acceleration (m/s^{2})';
-    panel_h.PANEL_RESULT2D.XGrid='on';panel_h.PANEL_RESULT2D.XMinorGrid='on';
-    panel_h.PANEL_RESULT2D.YGrid='on';panel_h.PANEL_RESULT2D.YMinorGrid='on';
+    corrhandle.XLabel.String='speed (m/s)';
+    corrhandle.YLabel.String='acceleration (m/s^{2})';
+    corrhandle.XGrid='on';corrhandle.XMinorGrid='on';
+    corrhandle.YGrid='on';corrhandle.YMinorGrid='on';
     vel_grid=[0,1];acc_grid=[min(edgex),max(edgex)];
-    axis(panel_h.PANEL_RESULT2D,[vel_grid(1),vel_grid(end),acc_grid(1),acc_grid(end)]);
-    
+    axis(corrhandle,[vel_grid(1),vel_grid(end),acc_grid(1),acc_grid(end)]);
+    %---------------------------------------------------------------------
     % extra group information
     plot(panel_h.PANEL_RESULTGROUP1DRECT,1:numel(t),cellfun(@(x)std(x),v),'Marker','o','MarkerSize',8,'LineStyle','-','LineWidth',2);
     panel_h.PANEL_RESULTGROUP1DRECT.XLabel.String='plot index';
@@ -99,7 +107,6 @@ catch exception
 end
 
 % -------------------------------------------------
-
     function [ time, speed, accel, Fh, Wh ] = calculate( ratobj )
         timewindow=1/20; %second
         % get video framerate for smoothing

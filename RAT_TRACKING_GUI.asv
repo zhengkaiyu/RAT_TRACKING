@@ -1,5 +1,5 @@
 function varargout = RAT_TRACKING_GUI(varargin)
-% Open Field Rat Tracking Analysis Software Ver 1.5
+% Open Field Rat Tracking Analysis Software Ver 1.4
 % Author: Kaiyu Zheng
 % Email: k.zheng@ucl.ac.uk
 % ------------------------------------------------------------------------
@@ -263,17 +263,14 @@ if success
     
 end
 
-function EDIT_GOTOTIME_Callback(hObject, ~, handles)
+function EDIT_GOTOTIME_Callback(hObject, eventdata, handles)
 global ratobj ratpt;
-% restrict time to boundary
-timept=min(max(ratobj{ratpt(1)}.abstract_av.time(1),str2double(get(hObject,'String'))),ratobj{ratpt(1)}.abstract_av.time(end));
-currentframe=find(ratobj{ratpt(1)}.abstract_av.time>=timept,1,'first');
+timept=str2double(get(hObject,'String'));
+timept=rat
+currentframe=
 % update result frame
 success=ratobj{ratpt(1)}.display_frames(handles.PANEL_RESULTVIDEO,currentframe,'wire');
-if success
-    % update slider
-    handles.SLIDER_FRAME.Value=currentframe;
-end
+
 
 function BUTTON_EXPORTVIDEO_Callback(~, ~, ~)
 global ratobj ratpt;

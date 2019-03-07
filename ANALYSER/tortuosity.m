@@ -1,6 +1,6 @@
 function tortuosity = tortuosity( boundary_vec )
-%TORTUOSITY Summary of this function goes here
-%   Detailed explanation goes here
+%TORTUOSITY calculate tortuosity as perimeter/area
+%   
 
 perimeter=sum(sqrt(sum(diff(boundary_vec,1).^2,2)));
 N=size(boundary_vec,1);

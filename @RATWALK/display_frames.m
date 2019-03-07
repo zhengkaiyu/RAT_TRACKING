@@ -38,10 +38,10 @@ try
                 end
                 temp=findobj(panel,'Tag','TimeStamp');
                 if isempty(temp)
-                    time_h=text(0,20,sprintf('%0.1f sec',obj.abstract_av.time(frame)),'Parent',panel,'Color','k','FontSize',14,'FontWeight','bold');
+                    time_h=text(0,20,sprintf('%0.1f sec (frame:%g)',obj.abstract_av.time(frame),frame),'Parent',panel,'Color','k','FontSize',14,'FontWeight','bold');
                     time_h.Tag='TimeStamp';
                 else
-                    temp.String=sprintf('%0.1f sec',obj.abstract_av.time(frame));
+                    temp.String=sprintf('%0.1f sec (frame:%g)',obj.abstract_av.time(frame),frame);
                 end
             end
         case 'wire'
@@ -62,10 +62,10 @@ try
                         end
                         temp=findobj(panel,'Tag','TimeStamp');
                         if isempty(temp)
-                            time_h=text(0,20,sprintf('%0.1f sec',obj.abstract_av.time(frame)),'Parent',panel,'Color','k','FontSize',14,'FontWeight','bold');
+                            time_h=text(0,20,sprintf('%0.1f sec (frame:%g)',obj.abstract_av.time(frame),frame),'Parent',panel,'Color','k','FontSize',14,'FontWeight','bold');
                             time_h.Tag='TimeStamp';
                         else
-                            temp.String=sprintf('%0.1f sec',obj.abstract_av.time(frame));
+                            temp.String=sprintf('%0.1f sec (frame:%g)',obj.abstract_av.time(frame),frame);
                         end
                         status=true;
                     end

@@ -5,9 +5,14 @@ function [ status ] = op_rangedspeedtrack( ratwalk_h, panel_h )
 %   running speed above max speed is set to max speed
 
 status=false;
-% default lower and upper bound for speed
-speed_bound=[0.05,3];
+
 try
+    % -------------------------------------------------
+    % parameter definitions
+    speed_bound=[0.05,3];% default lower and upper bound for speed m/s
+    accelhandle=panel_h.PANEL_RESULT2D;
+    timehandle=panel_h.PANEL_RESULT1DRECT;
+    speedhandle=panel_h.PANEL_RESULT1DSQ;
     % -------------------------------------------------
     % calculation returns
     % t = time information [total running time, total video time]
@@ -25,38 +30,41 @@ try
     %for ratidx=1:numel(t)
         % plot mean running speed+std
         temp=cell2mat(v');
-        errorbar(panel_h.PANEL_RESULT1DSQ,1:1:numel(t),temp(:,1),temp(:,2),'Marker','o','MarkerSize',3,'LineStyle','-','LineWidth',1);
+        errorbar(speedhandle,1:1:numel(t),temp(:,1),temp(:,2),'Marker','o','MarkerSize',3,'LineStyle','-','LineWidth',1);
         
         % plot % time running
         temp=cell2mat(t');
-        plot(panel_h.PANEL_RESULT1DRECT,1:1:numel(t),100*temp(:,1)./temp(:,2),'Marker','o','MarkerSize',5,'MarkerFaceColor','none','LineStyle','-','LineWidth',1);
+        plot(timehandle,1:1:numel(t),100*temp(:,1)./temp(:,2),'Marker','o','MarkerSize',5,'MarkerFaceColor','none','LineStyle','-','LineWidth',1);
         
         % plot accel/deaccel info
         temp=cell2mat(a');
         acc=temp(1:2:end,:);dacc=temp(2:2:end,:);
         errorbar(panel_h.PANEL_RESULT2D,1:1:numel(t),acc(:,1),acc(:,2),'Marker','o','MarkerSize',5,'MarkerFaceColor','none','LineStyle','-');
-        hold all;errorbar(panel_h.PANEL_RESULT2D,1:1:numel(t),dacc(:,1),dacc(:,2),'Marker','o','MarkerSize',5,'MarkerFaceColor','none','LineStyle','-');
+        hold all;errorbar(accelhandle,1:1:numel(t),dacc(:,1),dacc(:,2),'Marker','o','MarkerSize',5,'MarkerFaceColor','none','LineStyle','-');
     %end
     % plot labelling
-    panel_h.PANEL_RESULT1DSQ.XLabel.String='plot index';
-    panel_h.PANEL_RESULT1DSQ.YLabel.String='Mean Running Speed (m/s)';
-    set(panel_h.PANEL_RESULT1DSQ,'YScale','linear');
-    panel_h.PANEL_RESULT1DSQ.XGrid='on';panel_h.PANEL_RESULT1DSQ.XMinorGrid='on';
-    panel_h.PANEL_RESULT1DSQ.YGrid='on';panel_h.PANEL_RESULT1DSQ.YMinorGrid='on';
-    axis(panel_h.PANEL_RESULT1DSQ,'auto');
+    speedhandle.XLabel.String='plot index';
+    speedhandle.YLabel.String='Mean Running Speed (m/s)';
+    set(speedhandle,'YScale','linear');
+    speedhandle.XGrid='on';speedhandle.XMinorGrid='on';
+    speedhandle.YGrid='on';speedhandle.YMinorGrid='on';
+    axis(speedhandle,'auto');
     
-    panel_h.PANEL_RESULT1DRECT.XLabel.String='plot index';
-    panel_h.PANEL_RESULT1DRECT.YLabel.String='% Time Spent Running';
-    panel_h.PANEL_RESULT1DRECT.XGrid='on';panel_h.PANEL_RESULT1DRECT.XMinorGrid='on';
-    panel_h.PANEL_RESULT1DRECT.YGrid='on';panel_h.PANEL_RESULT1DRECT.YMinorGrid='on';
-    axis(panel_h.PANEL_RESULT1DRECT,'auto');
+    timehandle.XLabel.String='plot index';
+    timehandle.YLabel.String='% Time Spent Running';
+    timehandle.XGrid='on';timehandle.XMinorGrid='on';
+    timehandle.YGrid='on';timehandle.YMinorGrid='on';
+    axis(timehandle,'auto');
     
-    panel_h.PANEL_RESULT2D.XLabel.String='plot index';
-    panel_h.PANEL_RESULT2D.YLabel.String='mean acceleration (m/s^{2})';
-    panel_h.PANEL_RESULT2D.XGrid='on';panel_h.PANEL_RESULT2D.XMinorGrid='on';
-    panel_h.PANEL_RESULT2D.YGrid='on';panel_h.PANEL_RESULT2D.YMinorGrid='on';
-    axis(panel_h.PANEL_RESULT2D,'auto');
+    accelhandle.XLabel.String='plot index';
+    accelhandle.YLabel.String='mean acceleration (m/s^{2})';
+    accelhandle.XGrid='on';accelhandle.XMinorGrid='on';
+    accelhandle.YGrid='on';accelhandle.YMinorGrid='on';
+    axis(accelhandle,'auto');
    
+    %--------------------------------------------------------------------
+   
+    %--------------------------------------------------------------------
     status=true;
 catch exception
     message=[exception.message,data2clip(exception.stack)];
@@ -85,7 +93,6 @@ end
         time=time(2:end);
         % calculate acceleration as dv/dt
         accel = diff(speed)./diff(time);
-        
         
         running_idx=(speed>=speed_bound(1)&speed<=speed_bound(2));
         info_speed=[mean(speed(running_idx)),std(speed(running_idx))];

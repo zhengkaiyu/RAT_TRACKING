@@ -7,6 +7,11 @@ function [ status ] = op_tortuositytrack( ratwalk_h, panel_h )
 status=false;
 try
     % -------------------------------------------------
+    % parameter definitions
+    
+    torthandle=panel_h.PANEL_RESULT1DRECT;
+    histhandle=panel_h.PANEL_RESULT1DSQ;
+    % -------------------------------------------------
     % calculation
     if iscell(ratwalk_h)
         [time,tort,pos]=cellfun(@(x)calculate(x),ratwalk_h,'UniformOutput',false);
@@ -14,6 +19,8 @@ try
         [time{1},tort{1},pos{1}]=calculate(ratwalk_h);
     end
     % -------------------------------------------------
+    % get object names
+    objname=regexp(cellfun(@(x)x.name,ratwalk_h,'UniformOutput',false),'(?<=\\)\w*(?=.rwm)','match');
     % plotting
     plotx=linspace(3,10,100)';
     for ratidx=1:numel(time)
@@ -22,28 +29,34 @@ try
         ploty=accumarray(plotbin+1,time{ratidx},[numel(ploty)+1,1],@sum,0);% total time
         ploty=100*ploty./sum(ploty);% normalise sum to 1
         ploty=ploty(2:end);% remove the out of bound bin
-        plot(panel_h.PANEL_RESULT1DSQ,plotx(2:end),ploty,'LineStyle','-','LineWidth',1);
+        plot(histhandle,plotx(2:end),ploty,'LineStyle','-','LineWidth',1,'Tag',char(objname{ratidx}));
         % plot tortuosity over time
-        plot(panel_h.PANEL_RESULT1DRECT,time{ratidx},tort{ratidx},'LineWidth',1,'LineStyle','-');
+        plot(torthandle,time{ratidx},tort{ratidx},'LineWidth',1,'LineStyle','-','Tag',char(objname{ratidx}));
         
     end
-    % plot labelling
-    panel_h.PANEL_RESULT1DSQ.XLabel.String='Tortuosity';
-    panel_h.PANEL_RESULT1DSQ.YLabel.String='% Time spent';
-    panel_h.PANEL_RESULT1DSQ.XGrid='on';panel_h.PANEL_RESULT1DSQ.XMinorGrid='on';
-    panel_h.PANEL_RESULT1DSQ.YGrid='on';panel_h.PANEL_RESULT1DSQ.YMinorGrid='on';
-    axis(panel_h.PANEL_RESULT1DSQ,'tight');
     
-    panel_h.PANEL_RESULT1DRECT.XLabel.String='Time (s)';
-    panel_h.PANEL_RESULT1DRECT.YLabel.String='Tortuosity';
-    panel_h.PANEL_RESULT1DRECT.XGrid='on';panel_h.PANEL_RESULT1DRECT.XMinorGrid='on';
-    panel_h.PANEL_RESULT1DRECT.YGrid='on';panel_h.PANEL_RESULT1DRECT.YMinorGrid='on';
-    axis(panel_h.PANEL_RESULT1DRECT,'tight');
+    legetext=regexp(cellfun(@(x)x.name,ratwalk_h,'UniformOutput',false),'(?<=\\)\w*(?=.rwm)','match');% get object name
+    legend(panel_h.PANEL_RESULT2D,[legetext{:}],'Location','northeast','Interpreter','none','Orientation','Verticle');
+    
+    % plot labelling
+    histhandle.XLabel.String='Tortuosity';
+    histhandle.YLabel.String='% Time spent';
+    histhandle.XGrid='on';histhandle.XMinorGrid='on';
+    histhandle.YGrid='on';histhandle.YMinorGrid='on';
+    axis(histhandle,'tight');
+    
+    torthandle.XLabel.String='Time (s)';
+    torthandle.YLabel.String='Tortuosity';
+    torthandle.XGrid='on';torthandle.XMinorGrid='on';
+    torthandle.YGrid='on';torthandle.YMinorGrid='on';
+    axis(torthandle,'tight');
     
     panel_h.PANEL_RESULT2D.XGrid='on';panel_h.PANEL_RESULT2D.XMinorGrid='on';
     panel_h.PANEL_RESULT2D.YGrid='on';panel_h.PANEL_RESULT2D.YMinorGrid='on';
     axis(panel_h.PANEL_RESULT2D,'tight');
+    %--------------------------------------------------------------------
     
+    %--------------------------------------------------------------------
     status=true;
 catch exception
     message=[exception.message,data2clip(exception.stack)];

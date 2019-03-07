@@ -8,6 +8,12 @@ location_edge=[0,0.23,0.37,0.6];%define centre,edge,corner as distance from cent
 location_id={'Centre','Edge','Corner'};
 try
     % -------------------------------------------------
+    % parameter definitions
+    
+    angularhandle=panel_h.PANEL_RESULT2D;
+    lochandle=panel_h.PANEL_RESULT1DRECT;
+    raddisthandle=panel_h.PANEL_RESULT1DSQ;
+    % -------------------------------------------------
     % calculation
     if iscell(ratwalk_h)
         [time,edgex,rho,theta]=cellfun(@(x)calculate(x),ratwalk_h,'UniformOutput',false);
@@ -16,6 +22,8 @@ try
     end
     
     % -------------------------------------------------
+     % get object names
+    objname=regexp(cellfun(@(x)x.name,ratwalk_h,'UniformOutput',false),'(?<=\\)\w*(?=.rwm)','match');
     % plotting
     for ratidx=1:numel(rho)
         % plot radial distance histgram
@@ -24,45 +32,46 @@ try
         ploty=accumarray(plotbin+1,time{ratidx},[numel(ploty)+1,1],@sum,0);% total time
         ploty=100*ploty./sum(ploty);% normalise sum to 1
         ploty=ploty(2:end);% remove the out of bound bin
-        plot(panel_h.PANEL_RESULT1DSQ,plotx,ploty,'LineStyle','-','LineWidth',1);
+        plot(raddisthandle,plotx,ploty,'LineStyle','-','LineWidth',1,'Tag',char(objname{ratidx}));
         
         % plot time spent at different location
         [locy,~,locbin]=histcounts(rho{ratidx},location_edge);
         locy=accumarray(locbin+1,time{ratidx},[numel(locy)+1,1],@sum,0);% total time
         locy=100*locy./sum(locy);% normalise sum to 1
         locationp{ratidx}=locy(2:end);
-        plot(panel_h.PANEL_RESULT1DRECT,1:numel(location_edge)-1,locationp{ratidx},'Marker','o','MarkerSize',8,'LineStyle','-','LineWidth',1);
+        plot(lochandle,1:numel(location_edge)-1,locationp{ratidx},'Marker','o','MarkerSize',8,'LineStyle','-','LineWidth',1,'Tag',char(objname{ratidx}));
         
         % plot rat walk angle in 2D to see preferential corners
         [a,b]=rose(theta{ratidx},36);
         b=100*b./numel(theta{ratidx});%percentage frame time
-        polar(panel_h.PANEL_RESULT2D,a,b);
+        polar(angularhandle,a,b);
     end
+
     % radial distribution
-    panel_h.PANEL_RESULT1DSQ.XLabel.String='Radial Distance (m)';
-    panel_h.PANEL_RESULT1DSQ.YLabel.String='% Time spent';
-    panel_h.PANEL_RESULT1DSQ.XGrid='on';panel_h.PANEL_RESULT1DSQ.XMinorGrid='on';
-    panel_h.PANEL_RESULT1DSQ.YGrid='on';panel_h.PANEL_RESULT1DSQ.YMinorGrid='on';
-    panel_h.PANEL_RESULT1DSQ.YScale='Log';
-    axis(panel_h.PANEL_RESULT1DSQ,'tight');
+    raddisthandle.XLabel.String='Radial Distance from Centre(m)';
+    raddisthandle.YLabel.String='% Time spent';
+    raddisthandle.XGrid='on';raddisthandle.XMinorGrid='on';
+    raddisthandle.YGrid='on';raddisthandle.YMinorGrid='on';
+    raddisthandle.YScale='Log';
+    axis(raddisthandle,'tight');
     
     % preferred location
-    panel_h.PANEL_RESULT1DRECT.XTick=1:1:numel(location_edge);
-    panel_h.PANEL_RESULT1DRECT.XTickLabel=location_id;
-    panel_h.PANEL_RESULT1DRECT.XLabel.String='Location';
-    panel_h.PANEL_RESULT1DRECT.YLabel.String='% Time spent';
-    panel_h.PANEL_RESULT1DRECT.YScale='Log';
-    panel_h.PANEL_RESULT1DRECT.XGrid='on';panel_h.PANEL_RESULT1DRECT.XMinorGrid='on';
-    panel_h.PANEL_RESULT1DRECT.YGrid='on';panel_h.PANEL_RESULT1DRECT.YMinorGrid='on';
-    axis(panel_h.PANEL_RESULT1DRECT,[0.5,3.5,1e-1,1e2]);
+    lochandle.XTick=1:1:numel(location_edge);
+    lochandle.XTickLabel=location_id;
+    lochandle.XLabel.String='Location';
+    lochandle.YLabel.String='% Time spent';
+    lochandle.YScale='Log';
+    lochandle.XGrid='on';lochandle.XMinorGrid='on';
+    lochandle.YGrid='on';lochandle.YMinorGrid='on';
+    axis(lochandle,[0.5,3.5,1e-1,1e2]);
     
     % Angular distribution
-    panel_h.PANEL_RESULT2D.XLabel.String='Angle (Deg)';panel_h.PANEL_RESULT2D.YLabel.String='% Time Spent';
-    panel_h.PANEL_RESULT2D.XGrid='on';panel_h.PANEL_RESULT2D.XMinorGrid='on';
-    panel_h.PANEL_RESULT2D.YGrid='on';panel_h.PANEL_RESULT2D.YMinorGrid='on';
-    axis(panel_h.PANEL_RESULT2D,'tight');
-    
-     % group mean plot
+    angularhandle.XLabel.String='Angle (Deg)';angularhandle.YLabel.String='% Time Spent';
+    angularhandle.XGrid='on';angularhandle.XMinorGrid='on';
+    angularhandle.YGrid='on';angularhandle.YMinorGrid='on';
+    axis(angularhandle,'tight');
+    %---------------------------------------------------------------------
+    % group mean plot
     groupid=repmat(panel_h.LIST_GROUP.Value,[numel(location_id),1]);
     groupid=groupid+[-0.2;0;0.2];
     errorbar(panel_h.PANEL_RESULTGROUP1DSQ,groupid,mean(cell2mat(locationp),2),std(cell2mat(locationp),[],2),'Marker','o','MarkerSize',8,'LineStyle','none','LineWidth',2);

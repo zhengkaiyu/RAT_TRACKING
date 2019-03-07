@@ -66,7 +66,7 @@ try
             end
         else
             % no line object found
-            message=sprintf('\n%s\n','No traces found');
+            message=sprintf('%s%s\n',message,'No traces found');
         end
         
         % --- error bar plot ---
@@ -101,7 +101,7 @@ try
                 case 'Clipboard'
                     % send data to clipboard
                     data2clip(cellfun(@(x)x',data,'UniformOutput',false));
-                    message=sprintf('%g error bar plot exported to %s\n',numel(trace_x),'Clipboard');
+                    message=sprintf('%s\n%g error bar plot exported to %s\n',message,numel(trace_x),'Clipboard');
                     status=true;
                 case 'File'
                     % work out automatic filename
@@ -119,7 +119,7 @@ try
                             fprintf(fid,'\n');
                         end
                         fclose(fid);% close file
-                        message=sprintf('%g error bar plot exported to %s\n',numel(trace_x),FileName);
+                        message=sprintf('%s%g error bar plot exported to %s\n',message,numel(trace_x),FileName);
                         status=true;
                     else
                         % if user cancelled action
@@ -127,8 +127,8 @@ try
                     end
             end
         else
-            % no line object found
-            message=sprintf('\n%s\n','No traces found');
+            % no error plot object found
+            message=sprintf('%s%s\n',message,'No error data found');
         end
         
         % --- export surfaces ---
@@ -144,7 +144,7 @@ try
                 case 'Clipboard'
                     % send data to clipboard
                     data2clip(map);
-                    message=sprintf('%s\nmap data exported to Clipboard\n',message);
+                    message=sprintf('%smap data exported to Clipboard\n',message);
                     status=true;
                 case 'File'
                     tag=cat(2,PathName,'surface_',panel_tag,'_',datestr(now,'yyyymmddHHMMSS'));
@@ -196,7 +196,7 @@ try
             end
         else
             % didn't find surf plot data
-            message=sprintf('\n%s%s\n',message,'No surface data found');
+            message=sprintf('%s%s\n',message,'No surface data found');
         end
         
         % --- export scatter plot ---
