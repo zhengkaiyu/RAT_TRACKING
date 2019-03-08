@@ -20,7 +20,8 @@ try
     else
         message=sprintf('File loading cancelled\n');
     end
-    msgbox(message,'Open Rat File Message','modal');
+    %msgbox(message,'Open Rat File Message','modal');
+    fprintf('%s\n',message);
     beep;beep;
 catch exception
     message=[exception.message,data2clip(exception.stack)];
